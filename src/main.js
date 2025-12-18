@@ -7,6 +7,7 @@ const blockWidth = 30;
 const cols = Math.floor(board.clientWidth / blockWidth);
 const rows = Math.floor(board.clientHeight / blockHeight);
 let intervalId = null 
+let food = {x:Math.floor(Math.random() * rows), y:Math.floor(Math.random() * cols)}
 let gameOver = false;
 
 const blocks = []
@@ -27,16 +28,11 @@ for(let row = 0; row < rows; row++){
 
 
 function render(){
-  snake.forEach(segment =>{
-    blocks[`${segment.y}-${segment.x}`].classList.add("fill");
-  })
-}
-
-
-intervalId = setInterval(()=>{
   if(gameOver) return;
-  
-  let head = null 
+
+  let head = null
+
+  blocks[`${food.x}-${food.y}`].classList.add("food");
 
   switch(direction){
     case "left":
@@ -62,13 +58,24 @@ intervalId = setInterval(()=>{
     return;
   }
 
+  if(head.x == food.x && head.y == food.y){
+
+
+  }
+
   snake.forEach(segment =>{
     blocks[`${segment.y}-${segment.x}`].classList.remove("fill");
   })
 
   snake.unshift(head)
   snake.pop()
+  snake.forEach(segment =>{
+    blocks[`${segment.y}-${segment.x}`].classList.add("fill");
+  })
+}
 
+
+intervalId = setInterval(()=>{
   render()
 }, 400)
 
