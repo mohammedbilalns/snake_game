@@ -1,4 +1,11 @@
 const board = document.querySelector(".board");
+const startButton = document.querySelector(".btn-start")
+const modal = document.querySelector(".modal")
+const startGameModal = document.querySelector(".start-game")
+const gameOverModal = document.querySelector(".game-over")
+const restartButton = document.querySelector(".btn-restart")
+const scoreDisplay = document.querySelector(".score")
+const highScoreDisplay = document.querySelector(".high-score")
 
 const blockHeight = 30;
 const blockWidth = 30;
@@ -8,6 +15,7 @@ const rows = Math.floor(board.clientHeight / blockHeight);
 
 let intervalId = null;
 let gameOver = false;
+const score = 0;
 
 const blocks = {};
 
@@ -17,7 +25,7 @@ let food = {
 };
 
 let snake = [{ x: 1, y: 3 }];
-let direction = "down";
+let direction = "right"; // Start moving right
 
 board.innerHTML = "";
 
@@ -61,21 +69,42 @@ function render() {
   // bounds check
   if (
     head.x < 0 ||
-    head.x >= cols ||
-    head.y < 0 ||
-    head.y >= rows
+      head.x >= cols ||
+      head.y < 0 ||
+      head.y >= rows
   ) {
     gameOver = true;
     clearInterval(intervalId);
-    alert("Game Over");
+    modal.style.display="flex"
+    startGameModal.style.display = "none"
+    gameOverModal.style.display = "flex"
+    return;
+  }
+  
+  // self collision check
+  if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+    gameOver = true;
+    clearInterval(intervalId);
+    modal.style.display="flex"
+    startGameModal.style.display = "none"
+    gameOverModal.style.display = "flex"
     return;
   }
 
-  if (food.x === head.x && food.y === head.y) {
-    blocks[`${food.y}-${food.x}`].classList.remove("food");
-    food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+  const ateFood = food.x === head.x && food.y === head.y;
 
-    snake.unshift(head);
+  if (ateFood) {
+    blocks[`${food.y}-${food.x}`].classList.remove("food");
+    // Generate new food position that's not on the snake
+    let newFood;
+    do {
+      newFood = { 
+        x: Math.floor(Math.random() * cols), 
+        y: Math.floor(Math.random() * rows) 
+      };
+    } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+    
+    food = newFood;
   }
 
   // remove snake from previous cells
@@ -85,7 +114,9 @@ function render() {
 
   // move snake
   snake.unshift(head);
-  snake.pop();
+  if (!ateFood) {
+    snake.pop();
+  }
 
   // draw snake
   snake.forEach(segment => {
@@ -93,21 +124,57 @@ function render() {
   });
 }
 
-intervalId = setInterval(render, 400);
+
+startButton.addEventListener("click", () => {
+  modal.style.display = "none";
+  intervalId = setInterval(render, 400);
+})
+
+restartButton.addEventListener("click", restartGame)
+
+function restartGame(){
+  // Clear any existing interval first
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+  
+  // Clear food and snake from board
+  blocks[`${food.y}-${food.x}`].classList.remove("food");
+  snake.forEach(segment => {
+    blocks[`${segment.y}-${segment.x}`].classList.remove("fill");
+  })
+
+  // Reset game state
+  gameOver = false;
+  snake = [{ x: 1, y: 3 }];
+  direction = "down";
+  food = {
+    x: Math.floor(Math.random() * cols),
+    y: Math.floor(Math.random() * rows),
+  };
+  
+  // Hide modals
+  modal.style.display = "none";
+  gameOverModal.style.display = "none";
+  startGameModal.style.display = "none";
+  
+  // Start new game loop
+  intervalId = setInterval(render, 400);
+}
 
 window.addEventListener("keydown", e => {
   switch (e.key) {
     case "ArrowLeft":
-      direction = "left";
+      if (direction !== "right") direction = "left";
       break;
     case "ArrowRight":
-      direction = "right";
+      if (direction !== "left") direction = "right";
       break;
     case "ArrowUp":
-      direction = "up";
+      if (direction !== "down") direction = "up";
       break;
     case "ArrowDown":
-      direction = "down";
+      if (direction !== "up") direction = "down";
       break;
   }
 });
