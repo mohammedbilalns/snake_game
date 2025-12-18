@@ -6,6 +6,9 @@ const blockWidth = 30;
 
 const cols = Math.floor(board.clientWidth / blockWidth);
 const rows = Math.floor(board.clientHeight / blockHeight);
+let intervalId = null 
+let gameOver = false;
+
 const blocks = []
 let snake = [{x:1, y:3}]
 let direction = "down"
@@ -30,7 +33,9 @@ function render(){
 }
 
 
-setInterval(()=>{
+intervalId = setInterval(()=>{
+  if(gameOver) return;
+  
   let head = null 
 
   switch(direction){
@@ -50,6 +55,13 @@ setInterval(()=>{
       break
   }
 
+  if(head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows){
+    gameOver = true;
+    clearInterval(intervalId);
+    alert("Game Over");
+    return;
+  }
+
   snake.forEach(segment =>{
     blocks[`${segment.y}-${segment.x}`].classList.remove("fill");
   })
@@ -62,7 +74,6 @@ setInterval(()=>{
 
 
 window.addEventListener("keydown", e =>{
-  console.log("key down", e.key)
   switch(e.key){
     case "ArrowLeft":
       direction = "left"
